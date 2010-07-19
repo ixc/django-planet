@@ -12,12 +12,6 @@
     <link rel="alternate" type="application/rss+xml" title="{% trans 'Posts in' %} {{ site.name }} - RSS 2.0 Feed" href="{% url planet_rss_feed %}" />
 {% endblock %}
 
-{% block rss_feed %}
-    <a href="{% url planet_tag_rss_feed tag %}" title="{% trans 'Suscribe to RSS feed for tag' %} {{ tag }}">
-        <img src="{{ MEDIA_URL }}images/rss20.png" alt="RSS 2.0 Feed"/>
-    </a>
-{% endblock %}
-
 {% block content %}
     <h2>{% trans "Tag" %}: {{ tag }}</h2>
     {% autopaginate posts 20 %}
@@ -44,6 +38,12 @@
 {% endblock %}
 
 {% block right_column %}
+    {% block rss_feed %}
+        <a href="{% url planet_tag_rss_feed tag %}" title="{% trans 'Subscribe to RSS feed for tag' %} {{ tag }}">
+            <img src="{{ MEDIA_URL }}images/rss20.png" alt="RSS 2.0 Feed"/>
+        </a>
+    {% endblock %}
+
     <div>
         {% related_tags_for tag %}
     </div>

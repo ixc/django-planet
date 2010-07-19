@@ -211,32 +211,37 @@ class AuthorFeedChooser:
             return AuthorTagFeed(self.url, self.request, tag=tag).get_feed(params)
 
 def rss_feed(request, tag=None, author_id=None):
+    """
+    Get the items for the rss feed in three stages:
+    1. Get all items for a particular site
+    2. If there's an author field, get the author and filter posts
+    3. If there's a tag, filter TaggedItems using the object_list so far and the tag given.
+    """
     site = get_object_or_404(Site, pk=settings.SITE_ID)
-
-    params_dict = {"feed__site": site}
-
+    
+    object_list = Post.objects.filter(feed__site=site)
+    
     pretitle = ""
     title = "%s (RSS Feed)" % site.name
     
-    if tag:
-        params_dict.update({"tags__name": tag})
-        pretitle = "%s %s " % (tag, _("in"))
-
     if author_id:
-        params_dict.update({"feed__author": author_id})
         author = Author.objects.get(pk=author_id)
+        object_list = object_list.filter(authors=author)
         pretitle = "%s %s " % (author.name, _("in"))
-
+    
+    if tag:
+        object_list = TaggedItem.objects.get_by_model(object_list, tag)
+        pretitle = "%s %s " % (tag, _("in"))
+    
     try:
         posts_count = settings.FJ_EXTENSION_ITEMS_PER_FEED
     except AttributeError:
         posts_count = 50
 
-    object_list = Post.objects.filter(**params_dict).distinct()[:posts_count]
-    
     feed = feedgenerator.Rss201rev2Feed(title=pretitle + title,
         link=site.domain, description=None,
         feed_url=os.path.join(site.domain, reverse("planet_rss_feed")))
+    
 
     for post in object_list:
         author_list = post.authors.all()
