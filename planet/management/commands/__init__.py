@@ -17,6 +17,9 @@ from planet.models import (Blog, Generator, Feed, FeedLink, Post, PostLink,
         Author, PostAuthorData, Enclosure)
 from planet.signals import post_created
 
+# NEW
+from django.core.exceptions import ValidationError
+
 class PostAlreadyExists(Exception):
     pass
 
@@ -41,8 +44,9 @@ def process_feed(feed_url, create=False):
     try:
         USER_AGENT = settings.USER_AGENT
     except AttributeError:
-        print "Please set the variable USER_AGENT = <string> in your settings.py"
-        exit(0)
+        # print "Please set the variable USER_AGENT = <string> in your settings.py"
+        # exit(0)
+        raise ValidationError("Please set the variable USER_AGENT = <string> in your settings.py")
 
     feed_url = str(feed_url).strip()
 
@@ -56,13 +60,15 @@ def process_feed(feed_url, create=False):
 
     if create and planet_feed:
         # can't create it due to it already exists
-        print "This feed already exists!"
-        exit(0)
+        # print "This feed already exists!"
+        # exit(0)
+        raise ValidationError("This feed already exists!")
 
     if not create and not planet_feed:
         # can't update it due to it does not exist
-        print "This feed does not exist!"
-        exit(0)
+        # print "This feed does not exist!"
+        # exit(0)
+        raise ValidationError("This feed does not exist!")
 
     # retrieve and parse feed using conditional GET method
     if not create:
@@ -100,9 +106,12 @@ def process_feed(feed_url, create=False):
             if link:
                 blog_url = link[0]["href"]
 
-        blog, created = Blog.objects.get_or_create(
-            url=blog_url, defaults={"title": title})
-
+        try:
+            blog, created = Blog.objects.get_or_create(
+                url=blog_url, defaults={"title": title})
+        except:
+            raise ValidationError("Sorry, it doesn't look like this feed is formatted properly. Are you sure it's a valid RSS feed?")
+            
         generator_dict = document.feed.get("generator_detail", {})
 
         if generator_dict:
