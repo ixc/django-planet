@@ -323,6 +323,8 @@ class Enclosure(models.Model):
     length = models.CharField(_("Length"), max_length=20)
     mime_type = models.CharField(_("MIME type"), max_length=50, db_index=True)
     link = models.URLField(_("Url"), max_length=500, db_index=True)
+    # NEW: add a field to store the extra info from media:thumbnail (width, height, time) in a json.
+    extra_info = models.TextField(blank=True,null=True)
 
     site_objects = EnclosureManager()
     objects = models.Manager()
@@ -335,4 +337,14 @@ class Enclosure(models.Model):
 
     def __unicode__(self):
         return u"%s [%s] (%s)" % (self.link, self.mime_type, self.post)
+    
+    # try and get the extra info (width, height, time) from the extra_info text field,
+    # otherwise, return normal attribute.
+    def __getattribute__(self, name):
+        if name=="width" or name=="height" or name=="time":
+            if self.extra_info:
+                return eval(self.extra_info).get(name, None)
+            return None
+            
+        return object.__getattribute__(self, name)
 

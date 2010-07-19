@@ -211,14 +211,45 @@ def process_feed(feed_url, create=False):
                         )
 
                     # create and store enclosures...
-                    if entry.get('media_thumbnail', False):
-                        mime_type, enc = mimetypes.guess_type(urlparse(entry.get('media_thumbnail').href).path)
-                        post_enclosure, created = Enclosure.objects.get_or_create(
-                            post=post,
-                            length=0,
-                            mime_type=mime_type,
-                            link=entry.get('media_thumbnail').href
-                        )
+                    
+                    # NEW:
+                    # media:thumbnail has attributes: url, height, width, time.
+                    # see: http://www.rssboard.org/media-rss#media-thumbnails
+                    # check if it's a list, cast to list if it's not
+                    # iterate, and add as an enclosure
+                    # store height, etc, in json (write a method on closure)
+                    
+                    media_thumbnails = entry.get('media_thumbnail', False)
+                    if media_thumbnails:
+                        if not isinstance(media_thumbnails, list):
+                            media_thumbnails = [media_thumbnails]
+                        
+                        
+                        for media_thumbnail in media_thumbnails:
+                            mime_type, enc = mimetypes.guess_type(urlparse(media_thumbnail.get("url")).path)
+                        
+                            extra_info = {}
+                            extra_info['width'] = media_thumbnail.get("width", None)
+                            extra_info['height'] = media_thumbnail.get("height", None)
+                            extra_info['time'] = media_thumbnail.get("time", None)
+                        
+                            post_enclosure, created = Enclosure.objects.get_or_create(
+                                 post=post,
+                                 length=0,
+                                 mime_type=mime_type,
+                                 link=media_thumbnail.get("url"),
+                                 extra_info=extra_info,
+                             )
+                        
+                    # OLD:
+                    # if entry.get('media_thumbnail', False):
+                    #     mime_type, enc = mimetypes.guess_type(urlparse(entry.get('media_thumbnail').href).path)
+                    #     post_enclosure, created = Enclosure.objects.get_or_create(
+                    #         post=post,
+                    #         length=0,
+                    #         mime_type=mime_type,
+                    #         link=entry.get('media_thumbnail').href
+                    #     )
                     for enclosure_dict in entry.get("enclosures", []):
                         post_enclosure = Enclosure(
                             post=post,
