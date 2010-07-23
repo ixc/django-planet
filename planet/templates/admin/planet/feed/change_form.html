@@ -1,0 +1,14 @@
+{% extends "admin/change_form.html" %}
+
+{% block extrahead %}
+{{ block.super }}
+{% if add %}
+    <script type="text/javascript">
+    $(document).ready(
+        function(){
+            $("h2:contains('Extras')").parent().hide();
+        }
+    );
+    </script>
+{% endif %}
+{% endblock %}

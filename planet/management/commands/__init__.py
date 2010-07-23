@@ -194,6 +194,7 @@ def process_feed(feed_url, create=False):
                 else:
                     new_posts_count += 1
                     # create post tags...
+                    tag_list = ""
                     for tag_dict in entry.get("tags", []):
                         tag_name = tag_dict.get("term") or tag_dict.get("label")
                         tag_name = tag_name[:255]
@@ -205,10 +206,15 @@ def process_feed(feed_url, create=False):
                                     if subtag:
                                         # empty string if starts/ends with slash
                                         Tag.objects.add_tag(post, '"%s"' % subtag)
+                                        tag_list = "%s %s" % (tag_list, subtag)
                             else:
                                 Tag.objects.add_tag(post, '"%s"' % tag_name)
+                                tag_list = "%s %s" % (tag_list, tag_name)
                         except AttributeError, e:
                             print "Ignoring tag error: %s" % e
+                        
+                        post.tags = tag_list
+                        post.save()
                     # create post links...
                     for link_dict in entry.get("links", []):
                         post_link, created = PostLink.objects.get_or_create(

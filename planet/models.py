@@ -32,6 +32,7 @@ from django.db.models.signals import pre_delete
 
 import tagging
 from tagging.models import Tag
+from tagging.fields import TagField
 
 from planet.managers import (FeedManager, AuthorManager, BlogManager,
     PostManager, GeneratorManager, PostLinkManager, FeedLinkManager,
@@ -215,6 +216,7 @@ class Post(models.Model):
     guid = models.CharField(_("Guid"), max_length=200, db_index=True)
     content = models.TextField(_("Content"))
     comments_url = models.URLField(_("Comments URL"), blank=True, null=True)
+    tags = TagField(blank=True, null=True)
 
     date_modified = models.DateTimeField(_("Date modified"), null=True,
         blank=True, db_index=True)
@@ -236,8 +238,11 @@ class Post(models.Model):
     def get_absolute_url(self):
         return ('planet.views.post_detail', [str(self.id)])
 
+    def get_tags(self):
+        return Tag.objects.get_for_object(self)
+        
 # each Post object now will have got a .tags attribute!
-tagging.register(Post)
+#tagging.register(Post)
 
 # Deleting all asociated tags.
 def delete_asociated_tags(sender, **kwargs):
