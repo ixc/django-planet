@@ -38,7 +38,7 @@ class FeedAdmin(admin.ModelAdmin):
     list_filter = ("language", "generator", )
     fieldsets = (
         (None, {'fields': ('url',)}),
-        ('Extras', {'fields': ('blog', 'site', 'title', 'subtitle', 'rights', 'generator', 'info', 'language', 'guid', 'icon_url', 'image_url', 'etag', 'last_modified', 'last_checked', 'is_active')}),
+        ('Extras', {'fields': ('tags', 'blog', 'site', 'title', 'subtitle', 'rights', 'generator', 'info', 'language', 'guid', 'icon_url', 'image_url', 'etag', 'last_modified', 'last_checked', 'is_active')}),
     )
 
     # overrides the add_view so that the add_feed management command is execute with the url given.

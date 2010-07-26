@@ -34,6 +34,9 @@ import tagging
 from tagging.models import Tag
 from tagging.fields import TagField
 
+import settings as app_settings
+USE_MERGED_TAGS = getattr(settings, 'USE_MERGED_TAGS', getattr(app_settings, 'USE_MERGED_TAGS'))
+
 from planet.managers import (FeedManager, AuthorManager, BlogManager,
     PostManager, GeneratorManager, PostLinkManager, FeedLinkManager,
     EnclosureManager)
@@ -125,6 +128,9 @@ class Feed(models.Model):
     # in order to retrieve it or not
     is_active = models.BooleanField(_("Is active"), default=True, db_index=True,
         help_text=_("If disabled, this feed will not be further updated."))
+        
+    # new tagging
+    tags = TagField(blank=True, null=True, help_text="Enter tags (separated by spaces) for all items in this feed.")
 
     site_objects = FeedManager()
     objects = models.Manager()
@@ -182,7 +188,10 @@ class Feed(models.Model):
     def get_absolute_url(self):
         return ('planet.views.feed_detail', [str(self.id)])
 
-
+    def get_tags(self):
+        return Tag.objects.get_for_object(self)
+        
+    
 class PostAuthorData(models.Model):
     """
     This is the intermediate model that holds the information of the post authors
@@ -239,7 +248,11 @@ class Post(models.Model):
         return ('planet.views.post_detail', [str(self.id)])
 
     def get_tags(self):
+        if USE_MERGED_TAGS:
+            return Tag.objects.get_for_object(self) | self.feed.get_tags()
+            
         return Tag.objects.get_for_object(self)
+    
         
 # each Post object now will have got a .tags attribute!
 #tagging.register(Post)
